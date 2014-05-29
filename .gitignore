@@ -11,3 +11,5 @@ out
 .settings
 .classpath
 .project
+photoset.properties
+REST-Flickr-soapui-project.xml

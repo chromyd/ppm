@@ -18,6 +18,9 @@ public class PhotosetServlet extends HttpServlet {
     } else {
         resp.setContentType("text/plain");
         resp.getWriter().println("Hello, " + req.getParameter("name"));
+	    Properties p = new Properties();
+	    p.load(getClass().getResourceAsStream("/photoset.properties"));
+	    resp.getWriter().println("Token starts with " + p.getProperty("auth_token").substring(0,3));
     }
   }
 }
