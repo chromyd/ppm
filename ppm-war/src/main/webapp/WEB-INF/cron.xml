@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+	<!--
+	<cron>
+		<url>/photoset?name=create</url>
+		<description>Create photoset daily</description>
+		<schedule>every day 04:44</schedule>
+		<timezone>Europe/Berlin</timezone>
+	</cron>
+	-->
+</cronentries>
