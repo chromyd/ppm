@@ -1,7 +1,12 @@
 package de.blogspot.soahowto.ppm;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.google.appengine.repackaged.com.google.common.base.Stopwatch;
+import com.google.appengine.repackaged.com.google.common.base.Strings;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
 import com.google.cloud.sql.jdbc.internal.Charsets;
+import jersey.repackaged.com.google.common.base.Objects;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -9,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
@@ -16,6 +22,13 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 public class PhotosetServlet extends HttpServlet {
+	public static final String FLICKR_REST_URL = "https://api.flickr.com/services/rest/";
+	public static final String AUTH_TOKEN = "auth_token";
+	public static final String API_KEY = "api_key";
+	public static final String METHOD = "method";
+	public static final String PER_PAGE = "per_page";
+	public static final String FORMAT = "format";
+
 	private final Properties properties;
 
 	public PhotosetServlet() {
@@ -24,55 +37,94 @@ public class PhotosetServlet extends HttpServlet {
 
 	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		System.out.println("inside doGet");
 		if (req.getParameter("testing") != null) {
-			resp.setContentType("text/plain");
+			resp.setContentType(MediaType.TEXT_PLAIN);
 			resp.getWriter().println("Hello, this is a testing servlet. \n\n");
 			Properties p = System.getProperties();
 			p.list(resp.getWriter());
 		} else {
-			resp.setContentType("text/plain");
-			resp.getWriter().println("Hello, " + req.getParameter("name"));
+			resp.setContentType(MediaType.TEXT_PLAIN);
 			properties.load(getClass().getResourceAsStream("/photoset.properties"));
-			resp.getWriter().println("Token starts with " + properties.getProperty("auth_token").substring(0, 3));
-			switch (req.getParameter("name")) {
+			switch (Strings.nullToEmpty(req.getParameter("action"))) {
 				case "create": {
 					Client client = ClientBuilder.newClient();
 					Map<String, Object> params = newParamMap()
-							.put("auth_token", properties.getProperty("auth_token"))
-							.put("api_key", properties.getProperty("api_key"))
-							.put("method", "flickr.photosets.create")
+							.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+							.put(API_KEY, properties.getProperty(API_KEY))
+							.put(METHOD, "flickr.photosets.create")
 							.put("title", "daily500")
 							.put("description", "auto created on " + new Date())
 							.put("primary_photo_id", "12028509755")
 							.map();
-					String response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
+					String response = addSignedParams(client.target(FLICKR_REST_URL), params)
+							.request().get(String.class);
+					resp.getWriter().println("Response:\n" + response);
+					break;
+				}
+				case "jsond": {
+					Client client = ClientBuilder.newClient();
+					Map<String, Object> params = newParamMap()
+							.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+							.put(API_KEY, properties.getProperty(API_KEY))
+							.put(METHOD, "flickr.photos.getWithoutGeoData")
+							.put(PER_PAGE, 5)
+							.put(FORMAT, "json")
+							.map();
+					String response = addSignedParams(client.target(FLICKR_REST_URL), params)
 							.request().get(String.class);
 					resp.getWriter().println("Response:\n" + response);
 					break;
 				}
 				case "json": {
-					Client client = ClientBuilder.newClient();
-					Map<String, Object> params = newParamMap()
-							.put("auth_token", properties.getProperty("auth_token"))
-							.put("api_key", properties.getProperty("api_key"))
-							.put("method", "flickr.photos.getWithoutGeoData")
-							.put("per_page", 5)
-							.put("format", "json")
-							.map();
-//					InputStream response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
-//							.request().get(InputStream.class);
-					String response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
-							.request().get(String.class);
-					resp.getWriter().println("Response:\n" + response);
+					Stopwatch watch = Stopwatch.createStarted();
+					int page = 0;
+					int numPages = -1;
+					int perPage = Integer.valueOf(Objects.firstNonNull(req.getParameter(PER_PAGE), "500"));
+					do {
+						Client client = ClientBuilder.newClient();
+						Map<String, Object> params = newParamMap()
+								.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+								.put(API_KEY, properties.getProperty(API_KEY))
+								.put(METHOD, "flickr.photos.getWithoutGeoData")
+								.put(PER_PAGE, perPage)
+								.put("page", ++page)
+								.put(FORMAT, "json")
+								.map();
+						String response = addSignedParams(client.target(FLICKR_REST_URL), params)
+								.request().get(String.class);
+						// extracts the text inside jsonFlickrApi(...) from the response
+						JsonParser parser = new JsonFactory().createParser(response.substring(14, response.length() - 1));
+						while (parser.nextToken() != null) {
+							switch (Strings.nullToEmpty(parser.getCurrentName())) {
+								case "page":
+									parser.nextToken();
+									if (page != parser.getIntValue()) {
+										throw new RuntimeException("Page mismatch: on page #" + parser.getIntValue() +
+												" but expected to be on #" + page);
+									}
+									break;
+								case "pages":
+									parser.nextToken();
+									numPages = parser.getIntValue();
+									break;
+								case "id":
+									parser.nextToken();
+									// use parser.getValueAsString()
+									break;
+							}
+						}
+						parser.close();
+					} while (page < numPages);
+					resp.getWriter().println("Read " + page + " pages with " + perPage + " items per page.");
+					resp.getWriter().println("Time " + watch);
 					break;
 				}
 				default: {
 					Client client = ClientBuilder.newClient();
-					String response = client.target("https://api.flickr.com/services/rest/")
-							.queryParam("auth_token", properties.getProperty("auth_token"))
-							.queryParam("api_key", properties.getProperty("api_key"))
-							.queryParam("method", "flickr.photos.getWithoutGeoData")
+					String response = client.target(FLICKR_REST_URL)
+							.queryParam(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+							.queryParam(API_KEY, properties.getProperty(API_KEY))
+							.queryParam(METHOD, "flickr.photos.getWithoutGeoData")
 							.queryParam("page", 12)
 							.queryParam("api_sig", "fb5c9d5d4f8e82d8e51ac00a29bac55d")
 							.request().get(String.class);
@@ -88,7 +140,6 @@ public class PhotosetServlet extends HttpServlet {
 			signature.append(entry.getKey()).append(entry.getValue());
 			target = target.queryParam(entry.getKey(), entry.getValue());
 		}
-		System.out.println("Signature: " + signature);
 		return target.queryParam("api_sig", md5(signature.toString()));
 	}
 
