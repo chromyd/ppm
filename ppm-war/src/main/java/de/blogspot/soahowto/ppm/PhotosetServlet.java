@@ -38,7 +38,7 @@ public class PhotosetServlet extends HttpServlet {
 			switch (req.getParameter("name")) {
 				case "create": {
 					Client client = ClientBuilder.newClient();
-					Map<String, String> params = newParamMap()
+					Map<String, Object> params = newParamMap()
 							.put("auth_token", properties.getProperty("auth_token"))
 							.put("api_key", properties.getProperty("api_key"))
 							.put("method", "flickr.photosets.create")
@@ -46,6 +46,22 @@ public class PhotosetServlet extends HttpServlet {
 							.put("description", "auto created on " + new Date())
 							.put("primary_photo_id", "12028509755")
 							.map();
+					String response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
+							.request().get(String.class);
+					resp.getWriter().println("Response:\n" + response);
+					break;
+				}
+				case "json": {
+					Client client = ClientBuilder.newClient();
+					Map<String, Object> params = newParamMap()
+							.put("auth_token", properties.getProperty("auth_token"))
+							.put("api_key", properties.getProperty("api_key"))
+							.put("method", "flickr.photos.getWithoutGeoData")
+							.put("per_page", 5)
+							.put("format", "json")
+							.map();
+//					InputStream response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
+//							.request().get(InputStream.class);
 					String response = addSignedParams(client.target("https://api.flickr.com/services/rest/"), params)
 							.request().get(String.class);
 					resp.getWriter().println("Response:\n" + response);
@@ -66,9 +82,9 @@ public class PhotosetServlet extends HttpServlet {
 		}
 	}
 
-	private WebTarget addSignedParams(WebTarget target, Map<String, String> params) {
-		StringBuffer signature = new StringBuffer(properties.getProperty("secret"));
-		for (Map.Entry<String, String> entry : params.entrySet()) {
+	private WebTarget addSignedParams(WebTarget target, Map<String, Object> params) {
+		StringBuilder signature = new StringBuilder(properties.getProperty("secret"));
+		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			signature.append(entry.getKey()).append(entry.getValue());
 			target = target.queryParam(entry.getKey(), entry.getValue());
 		}
@@ -80,7 +96,7 @@ public class PhotosetServlet extends HttpServlet {
 		return Hashing.md5().newHasher().putString(text, Charsets.US_ASCII).hash().toString();
 	}
 
-	private FluentMapDecorator<String, String> newParamMap() {
-		return new FluentMapDecorator<>(new TreeMap<String, String>());
+	private FluentMapDecorator<String, Object> newParamMap() {
+		return new FluentMapDecorator<>(new TreeMap<String, Object>());
 	}
 }
