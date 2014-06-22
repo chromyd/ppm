@@ -6,9 +6,9 @@
 <body>
 
 <form action="/photoset" method="get">
-	Photoset name
-    <div><input type="text" name="title"/></div>
-    <div><input type="text" name="size"/></div>
+	<b>Photoset</b>
+    <div>Title <input type="text" name="title"/></div>
+    <div>Size <input type="text" name="size"/></div>
     <div><input type="submit" value="Create Photoset"/></div>
 </form>
 
