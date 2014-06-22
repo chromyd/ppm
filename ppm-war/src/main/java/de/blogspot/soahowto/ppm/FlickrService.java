@@ -102,6 +102,28 @@ public class FlickrService {
 	}
 
 	/**
+	 * Creates a new photo set, deleting it first if it already existed.
+	 *
+	 * @param title    Title of the photo set
+	 * @param photoIds list of photo ids to include in the photo set
+	 * @return The id of the new photo set
+	 */
+	public String deleteAndCreatePhotoSet(String title, List<String> photoIds) {
+		if (photoIds.isEmpty()) {
+			throw new TechnicalException("The list of photo IDs must not be empty");
+		}
+		String id = findPhotoSet(title);
+		if (id != null) {
+			deletePhotoSet(id);
+		}
+		id = createPhotoSet(title, photoIds.get(0));
+		for (int i = 1; i < photoIds.size(); ++i) {
+			addPhoto(id, photoIds.get(i));
+		}
+		return id;
+	}
+
+	/**
 	 * Creates a new photo set.
 	 *
 	 * @param title          Title of the photo set
@@ -179,6 +201,43 @@ public class FlickrService {
 		verify(response);
 	}
 
+	/**
+	 * Deletes a photo set.
+	 *
+	 * @param id id of the photo set
+	 */
+	public void deletePhotoSet(String id) {
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.delete")
+				.put("photoset_id", id)
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+	}
+
+	/**
+	 * Adds a photo to photo set.
+	 *
+	 * @param photoSetId id of the photo set
+	 * @param photoId    id of the photo to add
+	 */
+	public void addPhoto(String photoSetId, String photoId) {
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.addPhoto")
+				.put("photoset_id", photoSetId)
+				.put("photo_id", photoId)
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+	}
 	/**
 	 * Finds id of a photo set with the specified title.
 	 *

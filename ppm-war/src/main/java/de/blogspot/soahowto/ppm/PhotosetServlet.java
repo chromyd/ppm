@@ -25,7 +25,7 @@ public class PhotosetServlet extends HttpServlet {
 				int size = Integer.parseInt(req.getParameter("size"));
 				List<String> photoIds = flickrService.getAllPhotoIds();
 				Collections.shuffle(photoIds);
-				String id = flickrService.createOrUpdatePhotoSet(title, photoIds.subList(0, size));
+				String id = flickrService.deleteAndCreatePhotoSet(title, photoIds.subList(0, size));
 				resp.getWriter().println("Successfully created/updated photo set with id " + id);
 			} catch (RuntimeException e) {
 				resp.getWriter().println("Failed due to exception " + e);
