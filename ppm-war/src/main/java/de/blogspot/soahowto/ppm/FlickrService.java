@@ -2,6 +2,7 @@ package de.blogspot.soahowto.ppm;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.google.appengine.repackaged.com.google.common.base.Joiner;
 import com.google.appengine.repackaged.com.google.common.base.Strings;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
 import com.google.cloud.sql.jdbc.internal.Charsets;
@@ -31,7 +32,12 @@ public class FlickrService {
 		}
 	}
 
-	public List<String> getAllPhotos() {
+	/**
+	 * Returns a list of all ids of all photos belonging to the authenticated user.
+	 *
+	 * @return list of all photo ids
+	 */
+	public List<String> getAllPhotoIds() {
 		int page = 0;
 		int numPages = -1;
 		List<String> result = new ArrayList<>();
@@ -45,17 +51,15 @@ public class FlickrService {
 					.put("page", ++page)
 					.put(FORMAT, "json")
 					.map();
-			String response = addSignedParams(client.target(FLICKR_REST_URL), params)
-					.request().get(String.class);
-			try {
-				// extracts the text inside jsonFlickrApi(...) from the response
-				JsonParser parser = new JsonFactory().createParser(response.substring(14, response.length() - 1));
+			String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+			verify(response);
+			try (JsonParser parser = createParser(response)) {
 				while (parser.nextToken() != null) {
 					switch (Strings.nullToEmpty(parser.getCurrentName())) {
 						case "page":
 							parser.nextToken();
 							if (page != parser.getIntValue()) {
-								throw new RuntimeException("Page mismatch: on page #" + parser.getIntValue() +
+								throw new TechnicalException("Page mismatch: on page #" + parser.getIntValue() +
 										" but expected to be on #" + page);
 							}
 							break;
@@ -69,12 +73,165 @@ public class FlickrService {
 							break;
 					}
 				}
-				parser.close();
 			} catch (IOException e) {
 				throw new TechnicalException(e);
 			}
 		} while (page < numPages);
 		return result;
+	}
+
+	/**
+	 * Creates a new photo set.
+	 *
+	 * @param title    Title of the photo set
+	 * @param photoIds list of photo ids to include in the photo set
+	 * @return The id of the new photo set
+	 */
+	public String createPhotoSet(String title, List<String> photoIds) {
+		if (photoIds.isEmpty()) {
+			throw new TechnicalException("The list of photo IDs must not be empty");
+		}
+		String id = findPhotoSet(title);
+		if (id == null) {
+			id = createPhotoSet(title, photoIds.get(0));
+		}
+		editPhotoSet(id, photoIds);
+		return id;
+	}
+
+	/**
+	 * Creates a new photo set.
+	 *
+	 * @param title          Title of the photo set
+	 * @param primaryPhotoId primary photo id to associate with the photo set
+	 * @return The id of the new photo set
+	 */
+	public String createPhotoSet(String title, String primaryPhotoId) {
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.create")
+				.put("title", title)
+				.put("description", "auto created on " + new Date())
+				.put("primary_photo_id", primaryPhotoId)
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+		try (JsonParser parser = createParser(response)) {
+			while (parser.nextToken() != null) {
+				if ("id".equals(parser.getCurrentName())) {
+					parser.nextToken();
+					return parser.getValueAsString();
+				}
+			}
+		} catch (IOException e) {
+			throw new TechnicalException(e);
+		}
+		throw new TechnicalException("Failed to retrieve ID of the new photo set");
+	}
+
+	/**
+	 * Edits a new photo set.
+	 *
+	 * @param id       id of the photo set
+	 * @param photoIds photo ids that the photo set comprises of
+	 */
+	public void editPhotoSet(String id, List<String> photoIds) {
+		if (photoIds.isEmpty()) {
+			throw new TechnicalException("The list of photo IDs must not be empty");
+		}
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.editPhotos")
+				.put("photoset_id", id)
+				.put("primary_photo_id", photoIds.get(0))
+				.put("photo_ids", Joiner.on(',').join(photoIds))
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+	}
+
+	/**
+	 * Finds id of a photo set with the specified title.
+	 *
+	 * @param title title of the photo set to find
+	 * @return id of the photo set found or null if no photo set with the specified name exists
+	 */
+	public String findPhotoSet(String title) {
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.getList")
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+		try (JsonParser parser = createParser(response)) {
+			String provisionalId = null;
+			boolean inTitle = false;
+			while (parser.nextToken() != null) {
+				switch (Strings.nullToEmpty(parser.getCurrentName())) {
+					case "id":
+						parser.nextToken();
+						provisionalId = parser.getValueAsString();
+						break;
+					case "title":
+						parser.nextToken();
+						inTitle = true;
+						break;
+					case "_content":
+						if (inTitle && title.equals(parser.getValueAsString())) {
+							return provisionalId;
+						}
+						break;
+					default:
+						inTitle = false;
+				}
+			}
+		} catch (IOException e) {
+			throw new TechnicalException(e);
+		}
+		return null;
+	}
+
+	private void verify(String response) {
+		boolean success = false;
+		int code = 0;
+		String message = "Success response not recognized";
+		try (JsonParser parser = createParser(response)) {
+			while (parser.nextToken() != null) {
+				switch (Strings.nullToEmpty(parser.getCurrentName())) {
+					case "stat":
+						parser.nextToken();
+						success = "ok".equalsIgnoreCase(parser.getValueAsString());
+						break;
+					case "code":
+						parser.nextToken();
+						code = parser.getIntValue();
+						break;
+					case "message":
+						parser.nextToken();
+						message = parser.getValueAsString();
+						break;
+				}
+			}
+			if (!success) {
+				throw new TechnicalException("REST call failed - " + code + ": " + message);
+			}
+		} catch (IOException e) {
+			throw new TechnicalException(e);
+		}
+	}
+
+	private JsonParser createParser(String response) throws IOException {
+		// extracts the text inside jsonFlickrApi(...) from the response
+		return new JsonFactory().createParser(response.substring(14, response.length() - 1));
 	}
 
 	private WebTarget addSignedParams(WebTarget target, Map<String, Object> params) {
