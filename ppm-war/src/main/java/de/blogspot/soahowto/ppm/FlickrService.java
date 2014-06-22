@@ -87,13 +87,15 @@ public class FlickrService {
 	 * @param photoIds list of photo ids to include in the photo set
 	 * @return The id of the new photo set
 	 */
-	public String createPhotoSet(String title, List<String> photoIds) {
+	public String createOrUpdatePhotoSet(String title, List<String> photoIds) {
 		if (photoIds.isEmpty()) {
 			throw new TechnicalException("The list of photo IDs must not be empty");
 		}
 		String id = findPhotoSet(title);
 		if (id == null) {
 			id = createPhotoSet(title, photoIds.get(0));
+		} else {
+			updatePhotoSet(id, title);
 		}
 		editPhotoSet(id, photoIds);
 		return id;
@@ -150,6 +152,27 @@ public class FlickrService {
 				.put("photoset_id", id)
 				.put("primary_photo_id", photoIds.get(0))
 				.put("photo_ids", Joiner.on(',').join(photoIds))
+				.put(FORMAT, "json")
+				.map();
+		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		verify(response);
+	}
+
+	/**
+	 * Updates a photo set description.
+	 *
+	 * @param id id of the photo set
+	 * @param title title of the photo set
+	 */
+	public void updatePhotoSet(String id, String title) {
+		Client client = ClientBuilder.newClient();
+		Map<String, Object> params = newParamMap()
+				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
+				.put(API_KEY, properties.getProperty(API_KEY))
+				.put(METHOD, "flickr.photosets.editMeta")
+				.put("photoset_id", id)
+				.put("title", title)
+				.put("description", "auto updated on " + new Date())
 				.put(FORMAT, "json")
 				.map();
 		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);

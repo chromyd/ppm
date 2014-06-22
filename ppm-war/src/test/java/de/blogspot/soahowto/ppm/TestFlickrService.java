@@ -22,7 +22,7 @@ public class TestFlickrService {
 	public void createAndFindPhotoSet() {
 		List<String> photoIds = flickrService.getAllPhotoIds();
 		Collections.shuffle(photoIds);
-		String id1 = flickrService.createPhotoSet(PHOTO_SET_TITLE, photoIds.subList(0, 10));
+		String id1 = flickrService.createOrUpdatePhotoSet(PHOTO_SET_TITLE, photoIds.subList(0, 10));
 		String id2 = flickrService.findPhotoSet(PHOTO_SET_TITLE);
 		Assertions.assertThat(id2).isEqualTo(id1);
 	}
