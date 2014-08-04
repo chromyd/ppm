@@ -97,7 +97,7 @@ public class FlickrService {
 		} else {
 			updatePhotoSet(id, title);
 		}
-		editPhotoSet(id, photoIds);
+		editPhotoSet(id, photoIds, true);
 		return id;
 	}
 
@@ -161,8 +161,10 @@ public class FlickrService {
 	 *
 	 * @param id       id of the photo set
 	 * @param photoIds photo ids that the photo set comprises of
+	 * @param shorten flag indicating whether the final URL should be shortened using the {@link ShortenerService}
+	 *                   prior to making the REST API call
 	 */
-	public void editPhotoSet(String id, List<String> photoIds) {
+	public void editPhotoSet(String id, List<String> photoIds, boolean shorten) {
 		if (photoIds.isEmpty()) {
 			throw new TechnicalException("The list of photo IDs must not be empty");
 		}
@@ -176,7 +178,14 @@ public class FlickrService {
 				.put("photo_ids", Joiner.on(',').join(photoIds))
 				.put(FORMAT, "json")
 				.map();
-		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
+		WebTarget webTarget = addSignedParams(client.target(FLICKR_REST_URL), params);
+		if (shorten) {
+			System.out.println("My client is " + client.getClass());
+			ShortenerService shortenerService = new ShortenerService();
+			String shortUrl = shortenerService.shortenUrl(webTarget.getUri().toString());
+			webTarget = client.target(shortUrl);
+		}
+		String response = webTarget.request().get(String.class);
 		verify(response);
 	}
 
