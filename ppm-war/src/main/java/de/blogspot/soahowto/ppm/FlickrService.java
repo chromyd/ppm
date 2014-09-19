@@ -6,6 +6,8 @@ import com.google.appengine.repackaged.com.google.common.base.Joiner;
 import com.google.appengine.repackaged.com.google.common.base.Strings;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
 import com.google.cloud.sql.jdbc.internal.Charsets;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -97,7 +99,7 @@ public class FlickrService {
 		} else {
 			updatePhotoSet(id, title);
 		}
-		editPhotoSet(id, photoIds, true);
+		editPhotoSet(id, photoIds, false);
 		return id;
 	}
 
@@ -168,7 +170,9 @@ public class FlickrService {
 		if (photoIds.isEmpty()) {
 			throw new TechnicalException("The list of photo IDs must not be empty");
 		}
-		Client client = ClientBuilder.newClient();
+		ClientConfig clientConfig = new ClientConfig();
+		clientConfig.connectorProvider(new ApacheConnectorProvider());
+		Client client = ClientBuilder.newClient(clientConfig);
 		Map<String, Object> params = newParamMap()
 				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
 				.put(API_KEY, properties.getProperty(API_KEY))
