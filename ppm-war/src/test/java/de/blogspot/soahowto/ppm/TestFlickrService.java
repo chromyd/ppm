@@ -19,21 +19,13 @@ public class TestFlickrService {
 	}
 
 	@Test
-	public void createAndFindPhotoSet() {
+	public void createFindDeletePhotoSet() {
 		List<String> photoIds = flickrService.getAllPhotoIds();
 		Collections.shuffle(photoIds);
 		String id1 = flickrService.createOrUpdatePhotoSet(PHOTO_SET_TITLE, photoIds.subList(0, 10));
 		String id2 = flickrService.findPhotoSet(PHOTO_SET_TITLE);
 		Assertions.assertThat(id2).isEqualTo(id1);
-	}
-
-	@Test
-	public void deleteAndCreatePhotoSet() {
-		List<String> photoIds = flickrService.getAllPhotoIds();
-		Collections.shuffle(photoIds);
-		String id1 = flickrService.deleteAndCreatePhotoSet(PHOTO_SET_TITLE, photoIds.subList(0, 10));
-		String id2 = flickrService.findPhotoSet(PHOTO_SET_TITLE);
-		Assertions.assertThat(id2).isEqualTo(id1);
+		flickrService.deletePhotoSet(id2);
 	}
 
 	@Test

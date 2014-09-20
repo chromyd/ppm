@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cronentries>
-	<!--
 	<cron>
-		<url>/photoset?name=create</url>
+		<url><![CDATA[/photoset?title=liquid500&size=500]]></url>
 		<description>Create photoset daily</description>
 		<schedule>every day 04:44</schedule>
 		<timezone>Europe/Berlin</timezone>
 	</cron>
-	-->
 </cronentries>

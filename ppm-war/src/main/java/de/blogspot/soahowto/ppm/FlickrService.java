@@ -99,29 +99,7 @@ public class FlickrService {
 		} else {
 			updatePhotoSet(id, title);
 		}
-		editPhotoSet(id, photoIds, false);
-		return id;
-	}
-
-	/**
-	 * Creates a new photo set, deleting it first if it already existed.
-	 *
-	 * @param title    Title of the photo set
-	 * @param photoIds list of photo ids to include in the photo set
-	 * @return The id of the new photo set
-	 */
-	public String deleteAndCreatePhotoSet(String title, List<String> photoIds) {
-		if (photoIds.isEmpty()) {
-			throw new TechnicalException("The list of photo IDs must not be empty");
-		}
-		String id = findPhotoSet(title);
-		if (id != null) {
-			deletePhotoSet(id);
-		}
-		id = createPhotoSet(title, photoIds.get(0));
-		for (int i = 1; i < photoIds.size(); ++i) {
-			addPhoto(id, photoIds.get(i));
-		}
+		editPhotoSet(id, photoIds);
 		return id;
 	}
 
@@ -163,10 +141,8 @@ public class FlickrService {
 	 *
 	 * @param id       id of the photo set
 	 * @param photoIds photo ids that the photo set comprises of
-	 * @param shorten flag indicating whether the final URL should be shortened using the {@link ShortenerService}
-	 *                   prior to making the REST API call
 	 */
-	public void editPhotoSet(String id, List<String> photoIds, boolean shorten) {
+	public void editPhotoSet(String id, List<String> photoIds) {
 		if (photoIds.isEmpty()) {
 			throw new TechnicalException("The list of photo IDs must not be empty");
 		}
@@ -183,12 +159,6 @@ public class FlickrService {
 				.put(FORMAT, "json")
 				.map();
 		WebTarget webTarget = addSignedParams(client.target(FLICKR_REST_URL), params);
-		if (shorten) {
-			System.out.println("My client is " + client.getClass());
-			ShortenerService shortenerService = new ShortenerService();
-			String shortUrl = shortenerService.shortenUrl(webTarget.getUri().toString());
-			webTarget = client.target(shortUrl);
-		}
 		String response = webTarget.request().get(String.class);
 		verify(response);
 	}
@@ -232,25 +202,6 @@ public class FlickrService {
 		verify(response);
 	}
 
-	/**
-	 * Adds a photo to photo set.
-	 *
-	 * @param photoSetId id of the photo set
-	 * @param photoId    id of the photo to add
-	 */
-	public void addPhoto(String photoSetId, String photoId) {
-		Client client = ClientBuilder.newClient();
-		Map<String, Object> params = newParamMap()
-				.put(AUTH_TOKEN, properties.getProperty(AUTH_TOKEN))
-				.put(API_KEY, properties.getProperty(API_KEY))
-				.put(METHOD, "flickr.photosets.addPhoto")
-				.put("photoset_id", photoSetId)
-				.put("photo_id", photoId)
-				.put(FORMAT, "json")
-				.map();
-		String response = addSignedParams(client.target(FLICKR_REST_URL), params).request().get(String.class);
-		verify(response);
-	}
 	/**
 	 * Finds id of a photo set with the specified title.
 	 *
