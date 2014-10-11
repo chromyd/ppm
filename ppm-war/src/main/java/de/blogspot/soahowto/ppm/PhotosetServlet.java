@@ -1,13 +1,15 @@
 package de.blogspot.soahowto.ppm;
 
+import com.google.appengine.repackaged.com.google.common.base.MoreObjects;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
+
+import static de.blogspot.soahowto.ppm.ListSelectionUtils.selectWithTopBias;
 
 public class PhotosetServlet extends HttpServlet {
 	private FlickrService flickrService = new FlickrService();
@@ -22,10 +24,10 @@ public class PhotosetServlet extends HttpServlet {
 		} else {
 			try {
 				String title = req.getParameter("title");
-				int size = Integer.parseInt(req.getParameter("size"));
-				List<String> photoIds = flickrService.getAllPhotoIds();
-				Collections.shuffle(photoIds);
-				String id = flickrService.createOrUpdatePhotoSet(title, photoIds.subList(0, size));
+				int size = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("size"), "500"));
+				int top = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("top"), "0"));
+				int topSize = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("topSize"), "0"));
+				String id = flickrService.createOrUpdatePhotoSet(title, selectWithTopBias(flickrService.getAllPhotoIds(), size, top, topSize));
 				resp.getWriter().println("Successfully created/updated photo set with id " + id);
 			} catch (RuntimeException e) {
 				resp.getWriter().println("Failed due to exception " + e);

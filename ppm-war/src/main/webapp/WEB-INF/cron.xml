@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cronentries>
 	<cron>
-		<url><![CDATA[/photoset?title=liquid500&size=500]]></url>
-		<description>Create photoset daily</description>
+		<url><![CDATA[/photoset?title=Liquid]]></url>
+		<description>Create liquid photoset daily</description>
+		<schedule>every day 04:40</schedule>
+		<timezone>Europe/Berlin</timezone>
+	</cron>
+	<cron>
+		<url><![CDATA[/photoset?title=Liquid+with+recent+Bias&top=75&topSize=50]]></url>
+		<description>Create liquid photoset with recent bias daily</description>
 		<schedule>every day 04:44</schedule>
 		<timezone>Europe/Berlin</timezone>
 	</cron>

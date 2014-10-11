@@ -1,6 +1,6 @@
 package de.blogspot.soahowto.ppm;
 
-import org.fest.assertions.Assertions;
+import org.fest.assertions.api.Assertions;
 import org.junit.Test;
 
 import java.util.Collections;
