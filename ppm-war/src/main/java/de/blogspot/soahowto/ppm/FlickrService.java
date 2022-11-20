@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.google.appengine.repackaged.com.google.common.base.Joiner;
 import com.google.appengine.repackaged.com.google.common.base.Strings;
 import com.google.appengine.repackaged.com.google.common.hash.Hashing;
-import com.google.cloud.sql.jdbc.internal.Charsets;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 
@@ -13,6 +12,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class FlickrService {
@@ -290,7 +290,7 @@ public class FlickrService {
 	}
 
 	private String md5(String text) {
-		return Hashing.md5().newHasher().putString(text, Charsets.US_ASCII).hash().toString();
+		return Hashing.md5().newHasher().putString(text, StandardCharsets.US_ASCII).hash().toString();
 	}
 
 	private FluentMapDecorator<String, Object> newParamMap() {
