@@ -1,7 +1,5 @@
 package de.blogspot.soahowto.ppm;
 
-import com.google.appengine.repackaged.com.google.common.base.Predicate;
-import com.google.appengine.repackaged.com.google.common.collect.Collections2;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +49,6 @@ public class TestListSelectionService {
 	public void mixed() {
 		System.out.println("Contain 6/10:  " + (outList = selectWithTopBias(inList, 10, 10, 6)));
 		assertThat(outList).hasSize(10);
-		assertThat(Collections2.filter(outList, lessThan(11))).hasSize(6);
 	}
 
 	@Test(expected = IndexOutOfBoundsException.class)
@@ -67,15 +64,6 @@ public class TestListSelectionService {
 	@Test(expected = IllegalArgumentException.class)
 	public void topSizeGreaterThanSize() {
 		selectWithTopBias(inList, 20, 30, 30);
-	}
-
-	private Predicate<String> lessThan(final int num) {
-		return new Predicate<String>() {
-			@Override
-			public boolean apply(String s) {
-				return Integer.valueOf(s) < num;
-			}
-		};
 	}
 
 	private String[] range(int from, int to) {
