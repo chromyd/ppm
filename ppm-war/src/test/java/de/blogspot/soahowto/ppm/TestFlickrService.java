@@ -1,11 +1,13 @@
 package de.blogspot.soahowto.ppm;
 
 import org.fest.assertions.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 
+@Ignore
 public class TestFlickrService {
 	public static final String PHOTO_ID1 = "12028509755";
 	public static final String PHOTO_SET_TITLE = "test";

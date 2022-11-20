@@ -26,9 +26,9 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>com.google.appengine</groupId>
+        <groupId>com.google.cloud.tools</groupId>
         <artifactId>appengine-maven-plugin</artifactId>
-        <version>${appengine.target.version}</version>
+        <version>${appengine.maven-plugin.version}</version>
       </plugin>
     </plugins>
   </build>

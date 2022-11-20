@@ -8,16 +8,17 @@
   
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <appengine.target.version>1.9.5</appengine.target.version>
+    <appengine.target.version>2.0.10</appengine.target.version>
+    <appengine.maven-plugin.version>2.4.4</appengine.maven-plugin.version>
   </properties>
 
   <build>
       <pluginManagement>
           <plugins>
               <plugin>
-                  <groupId>com.google.appengine</groupId>
+                  <groupId>com.google.cloud.tools</groupId>
                   <artifactId>appengine-maven-plugin</artifactId>
-                  <version>${appengine.target.version}</version>
+                  <version>${appengine.maven-plugin.version}</version>
               </plugin>
           </plugins>
       </pluginManagement>

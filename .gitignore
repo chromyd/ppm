@@ -8,6 +8,7 @@ out
 *.ipr
 *.iws
 .idea
+.vscode
 .settings
 .classpath
 .project
