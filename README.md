@@ -15,7 +15,9 @@ mvn package appengine:deploy -Dapp.deploy.projectId=flickrpm -Dapp.deploy.versio
 
 Monitoring
 ==========
-See Dashboard at https://console.cloud.google.com/appengine?project=flickrpm&serviceId=default&versionId=1
+
+- [Dashboard](https://console.cloud.google.com/appengine?project=flickrpm&serviceId=default&versionId=1)
+- [Error Reporting](https://console.cloud.google.com/errors?serviceId=default&versionId=1&project=flickrpm)
 
 TODOs
 =====
