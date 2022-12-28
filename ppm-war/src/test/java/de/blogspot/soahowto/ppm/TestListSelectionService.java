@@ -48,7 +48,7 @@ public class TestListSelectionService {
 
 	@Test
 	public void everythingFromBottom() {
-		System.out.println("Bottom 10 only:   " + (outList = selectWithTopBias(inList, 10, 90, 0)));
+		System.out.println("Bottom 10 only:" + (outList = selectWithTopBias(inList, 10, 90, 0)));
 		assertThat(outList).containsOnly(range(90, 100));
 	}
 
@@ -81,14 +81,14 @@ public class TestListSelectionService {
 
 	@Test
 	public void rollingOdd() {
-		System.out.println("Just odd:" + (outList = selectRolling(inList, 20, 2, 1)));
+		System.out.println("Just odd:      " + (outList = selectRolling(inList, 20, 2, 1)));
 		assertThat(outList).are(odd);
 		assertThat(outList).hasSize(20);
 	}
 
 	@Test
 	public void rollingEven() {
-		System.out.println("Just even:" + (outList = selectRolling(inList, 20, 2, 0)));
+		System.out.println("Just even:     " + (outList = selectRolling(inList, 20, 2, 0)));
 		assertThat(outList).are(even);
 		assertThat(outList).hasSize(20);
 	}
