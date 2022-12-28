@@ -36,7 +36,7 @@ public class PhotosetServlet extends HttpServlet {
 			try {
 				String title = req.getParameter("title");
 				int size = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("size"), "500"));
-				int modulus = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("modulus"), "0"));
+				int modulus = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("modulus"), "2"));
 				List<String> allPhotoIds = flickrService.getAllPhotoIds();
 				List<String> photoIds = (modulus == 0) ? selectRandom(allPhotoIds, size) : selectRolling(allPhotoIds, size, modulus, getEpochDay());
 				String id = flickrService.createOrUpdatePhotoSet(title, photoIds);
