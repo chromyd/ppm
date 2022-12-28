@@ -38,4 +38,13 @@ public class ListSelectionUtils {
 		resultList.addAll(remainderList.subList(0, size - topSize));
 		return resultList;
 	}
+
+	public static List<String> selectRolling(List<String> list, int size, int modulus, int remainder) {
+		List<String> listCopy = new ArrayList<>(list
+			.stream()
+			.filter(s -> Integer.parseInt(s) % modulus == remainder)
+			.toList());
+		Collections.shuffle(listCopy);
+		return listCopy.subList(0, size);
+	}
 }
