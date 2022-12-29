@@ -1,5 +1,5 @@
 cron:
 - description: "daily album update job"
-  url: /photoset?title=rolling5&size=500&modulus=5
+  url: /photoset?title=rolling3&size=500&modulus=3
   schedule: every day 03:33
 
