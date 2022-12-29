@@ -18,11 +18,11 @@ import static de.blogspot.soahowto.ppm.ListSelectionUtils.selectRolling;
 public class PhotosetServlet extends HttpServlet {
 	private FlickrService flickrService = new FlickrService();
 
-	private int getEpochDay() {
+	private int getEpochDay(int modulus) {
 		LocalDate now = LocalDate.now();
 		LocalDate epoch = LocalDate.ofEpochDay(0);
 
-		return (int)ChronoUnit.DAYS.between(epoch, now);
+		return (int)ChronoUnit.DAYS.between(epoch, now) % modulus;
 	}
 
 	@Override
@@ -36,9 +36,9 @@ public class PhotosetServlet extends HttpServlet {
 			try {
 				String title = req.getParameter("title");
 				int size = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("size"), "500"));
-				int modulus = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("modulus"), "2"));
+				int modulus = Integer.parseInt(MoreObjects.firstNonNull(req.getParameter("modulus"), "3"));
 				List<String> allPhotoIds = flickrService.getAllPhotoIds();
-				List<String> photoIds = (modulus == 0) ? selectRandom(allPhotoIds, size) : selectRolling(allPhotoIds, size, modulus, getEpochDay());
+				List<String> photoIds = (modulus == 0) ? selectRandom(allPhotoIds, size) : selectRolling(allPhotoIds, size, modulus, getEpochDay(modulus));
 				String id = flickrService.createOrUpdatePhotoSet(title, photoIds);
 				resp.getWriter().println("Successfully created/updated photo set with id " + id);
 			} catch (RuntimeException e) {
