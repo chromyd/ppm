@@ -20,6 +20,14 @@ Deploy to Google App Engine:
 mvn package appengine:deploy -Dapp.deploy.projectId=flickrpm -Dapp.deploy.version=1
 ```
 
+Updating the Cron Job
+=====================
+
+Update the job definition in `cron.yaml` and then deploy it with:
+```
+gcloud app deploy cron.yaml
+```
+
 Monitoring
 ==========
 
