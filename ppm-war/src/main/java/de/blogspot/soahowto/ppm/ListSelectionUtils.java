@@ -43,7 +43,7 @@ public class ListSelectionUtils {
         List<String> filteredList = new ArrayList<>();
 
         for (String id: list) {
-            if (Integer.parseInt(id) % modulus == remainder) {
+            if (Long.parseLong(id) % modulus == remainder) {
                 filteredList.add(id);
             }
         }
