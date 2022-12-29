@@ -38,4 +38,21 @@ public class ListSelectionUtils {
 		resultList.addAll(remainderList.subList(0, size - topSize));
 		return resultList;
 	}
+
+	private static List<String> makeSillyCopy(List<String> list, int modulus, int remainder) {
+        List<String> filteredList = new ArrayList<>();
+
+        for (String id: list) {
+            if (Long.parseLong(id) % modulus == remainder) {
+                filteredList.add(id);
+            }
+        }
+		return filteredList;
+	}
+
+	public static List<String> selectRolling(List<String> list, int size, int modulus, int remainder) {
+		List<String> listCopy = makeSillyCopy(list, modulus, remainder);
+		Collections.shuffle(listCopy);
+		return listCopy.subList(0, size);
+	}
 }

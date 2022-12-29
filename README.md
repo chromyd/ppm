@@ -9,6 +9,13 @@ See http://soahowto.blogspot.de/2014/09/create-flickr-application-hosted-on.html
 Deploying an Update
 ===================
 
+Install JDK 8 as default:
+```
+sdk install java 8.0.352-zulu
+sdk default java 8.0.352-zulu
+```
+
+Deploy to Google App Engine:
 ```
 mvn package appengine:deploy -Dapp.deploy.projectId=flickrpm -Dapp.deploy.version=1
 ```
