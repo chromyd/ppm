@@ -9,8 +9,7 @@
 	<b>Photoset</b>
     <div>Title <input type="text" name="title"/></div>
     <div>Size <input type="text" name="size"/></div>
-    <div>Top <input type="text" name="top"/></div>
-    <div>Top size <input type="text" name="topSize"/></div>
+    <div>Modulus <input type="text" name="modulus"/></div>
     <div><input type="submit" value="Create Photoset"/></div>
 </form>
 

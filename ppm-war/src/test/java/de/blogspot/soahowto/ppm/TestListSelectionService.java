@@ -1,8 +1,7 @@
 package de.blogspot.soahowto.ppm;
 
-import org.fest.assertions.core.Condition;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,23 +9,13 @@ import java.util.List;
 import static de.blogspot.soahowto.ppm.ListSelectionUtils.selectRandom;
 import static de.blogspot.soahowto.ppm.ListSelectionUtils.selectWithTopBias;
 import static de.blogspot.soahowto.ppm.ListSelectionUtils.selectRolling;
-import static org.fest.assertions.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 
 public class TestListSelectionService {
 	private List<String> inList = new ArrayList<>();
 	private List<String> outList;
-	private final Condition<String> odd = new Condition<String>("odd") {
-		@Override
-		public boolean matches(String value) {
-		  return Integer.parseInt(value) % 2 == 1;
-		}
-	  };
-	private final Condition<String> even = new Condition<String>("even") {
-		@Override
-		public boolean matches(String value) {
-		  return Integer.parseInt(value) % 2 == 0;
-		}
-	  };
+
 	@Before
 	public void setUp() {
 		for (int i = 0; i < 100; ) {
@@ -64,32 +53,32 @@ public class TestListSelectionService {
 		assertThat(outList).hasSize(10);
 	}
 
-	@Test(expected = IndexOutOfBoundsException.class)
+	@Test
 	public void sizeTooBig() {
-		selectRandom(inList, 105);
+		assertThrows(IndexOutOfBoundsException.class, () -> selectRandom(inList, 105));
 	}
 
-	@Test(expected = IndexOutOfBoundsException.class)
+	@Test
 	public void topSizeTooBig() {
-		selectWithTopBias(inList, 20, 10, 15);
+		assertThrows(IndexOutOfBoundsException.class, () -> selectWithTopBias(inList, 20, 10, 15));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void topSizeGreaterThanSize() {
-		selectWithTopBias(inList, 20, 30, 30);
+		assertThrows(IllegalArgumentException.class, () -> selectWithTopBias(inList, 20, 30, 30));
 	}
 
 	@Test
 	public void rollingOdd() {
 		System.out.println("Just odd:      " + (outList = selectRolling(inList, 20, 2, 1)));
-		assertThat(outList).are(odd);
+		assertThat(outList).allMatch(s -> Integer.parseInt(s) % 2 == 1);
 		assertThat(outList).hasSize(20);
 	}
 
 	@Test
 	public void rollingEven() {
 		System.out.println("Just even:     " + (outList = selectRolling(inList, 20, 2, 0)));
-		assertThat(outList).are(even);
+		assertThat(outList).allMatch(s -> Integer.parseInt(s) % 2 == 0);
 		assertThat(outList).hasSize(20);
 	}
 

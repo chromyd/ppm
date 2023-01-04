@@ -1,8 +1,8 @@
 package de.blogspot.soahowto.ppm;
 
-import org.fest.assertions.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,8 +16,8 @@ public class TestFlickrService {
 	@Test
 	public void getAllPhotoIds() {
 		List<String> photoIds = flickrService.getAllPhotoIds();
-		Assertions.assertThat(photoIds.contains(PHOTO_ID1));
-		Assertions.assertThat(photoIds.size()).isGreaterThan(FlickrService.PER_PAGE_VALUE);
+		assertThat(photoIds.contains(PHOTO_ID1));
+		assertThat(photoIds.size()).isGreaterThan(FlickrService.PER_PAGE_VALUE);
 	}
 
 	@Test
@@ -26,12 +26,12 @@ public class TestFlickrService {
 		Collections.shuffle(photoIds);
 		String id1 = flickrService.createOrUpdatePhotoSet(PHOTO_SET_TITLE, photoIds.subList(0, 10));
 		String id2 = flickrService.findPhotoSet(PHOTO_SET_TITLE);
-		Assertions.assertThat(id2).isEqualTo(id1);
+		assertThat(id2).isEqualTo(id1);
 		flickrService.deletePhotoSet(id2);
 	}
 
 	@Test
 	public void findPhotoSet() {
-		Assertions.assertThat(flickrService.findPhotoSet("best")).isNotNull();
+		assertThat(flickrService.findPhotoSet("best")).isNotNull();
 	}
 }
